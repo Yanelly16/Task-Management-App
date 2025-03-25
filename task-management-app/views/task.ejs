@@ -5,14 +5,217 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Task Manager</title>
-    <link rel="stylesheet" href="../public/styles.css">
+    <style>
+        /* Base Styles */
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #166088;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: #f5f5f5;
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Form Styles */
+        .task-form {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 6px;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .counter {
+            font-size: 0.8rem;
+            color: var(--gray);
+            text-align: right;
+            margin-top: 0.25rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+        }
+        
+        /* Error Messages */
+        .error-container {
+            background-color: #ffebee;
+            border-left: 4px solid var(--danger);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 4px 4px 0;
+        }
+        
+        .error-container ul {
+            list-style-type: none;
+        }
+        
+        .error-container li {
+            color: var(--danger);
+            margin-bottom: 0.5rem;
+        }
+        
+        .error-highlight {
+            border-color: var(--danger) !important;
+        }
+        
+        /* Task List */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .task {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+        
+        .task.completed {
+            background-color: #f8f9fa;
+            border-color: #dee2e6;
+        }
+        
+        .task.completed .task-content h3 {
+            text-decoration: line-through;
+            color: var(--gray);
+        }
+        
+        .task.completed .task-content p {
+            color: var(--gray);
+        }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-content h3 {
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+        
+        .task-content p {
+            color: #666;
+            margin-bottom: 0;
+        }
+        
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-complete {
+            background: var(--success);
+        }
+        
+        .btn-complete:hover {
+            background: #3d8b40;
+        }
+        
+        .btn-undo {
+            background: var(--warning);
+        }
+        
+        .btn-undo:hover {
+            background: #e68a00;
+        }
+        
+        .btn-delete {
+            background: var(--danger);
+        }
+        
+        .btn-delete:hover {
+            background: #d32f2f;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--gray);
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <h1>Task Manager</h1>
 
         <!-- Error Display -->
-        <% if (errors.length > 0) { %>
+        <% if (errors && errors.length > 0) { %>
             <div class="error-container">
                 <ul>
                     <% errors.forEach(error => { %>
@@ -23,21 +226,24 @@
         <% } %>
 
         <!-- Task Form -->
-        <form id="taskForm" action="/tasks" method="POST">
+        <form action="/tasks" method="POST" class="task-form">
             <div class="form-group">
                 <label for="title">Title *</label>
                 <input type="text" id="title" name="title" 
-                       value="<%= formData.title %>"
+                       value="<%= formData && formData.title || '' %>"
                        required
                        minlength="3"
-                       maxlength="100">
-                <div class="counter"><span id="titleCount"><%= titleLength %></span>/100</div>
+                       maxlength="100"
+                       class="<%= errors && errors.some(e => e.toLowerCase().includes('title')) ? 'error-highlight' : '' %>">
+                <div class="counter"><span><%= formData && formData.title ? formData.title.length : 0 %></span>/100</div>
             </div>
             
             <div class="form-group">
                 <label for="description">Description</label>
-                <textarea id="description" name="description" maxlength="500"><%= formData.description %></textarea>
-                <div class="counter"><span id="descCount"><%= descLength %></span>/500</div>
+                <textarea id="description" name="description" 
+                          maxlength="500"
+                          class="<%= errors && errors.some(e => e.toLowerCase().includes('description')) ? 'error-highlight' : '' %>"><%= formData && formData.description || '' %></textarea>
+                <div class="counter"><span><%= formData && formData.description ? formData.description.length : 0 %></span>/500</div>
             </div>
             
             <button type="submit" class="btn">Add Task</button>
@@ -45,116 +251,37 @@
 
         <!-- Task List -->
         <div class="task-list">
-            <% tasks.forEach(task => { %>
-                <div class="task <%= task.completed ? 'completed' : '' %>">
-                    <div class="task-content">
-                        <h3><%= task.title %></h3>
-                        <% if (task.description) { %>
-                            <p><%= task.description %></p>
-                        <% } %>
-                    </div>
-                    
-                    <div class="task-actions">
-                        <!-- Toggle Completion -->
-                        <form action="/tasks/<%= task.id %>" method="POST">
-                            <input type="hidden" name="_method" value="PATCH">
-                            <button type="submit" class="btn <%= task.completed ? 'btn-undo' : 'btn-complete' %>">
-                                <%= task.completed ? 'Undo' : 'Complete' %>
-                            </button>
-                        </form>
+            <% if (tasks && tasks.length > 0) { %>
+                <% tasks.forEach(task => { %>
+                    <div class="task <%= task.completed ? 'completed' : '' %>">
+                        <div class="task-content">
+                            <h3><%= task.title %></h3>
+                            <% if (task.description) { %>
+                                <p><%= task.description %></p>
+                            <% } %>
+                        </div>
                         
-                        <!-- Delete Task -->
-                        <form action="/tasks/<%= task.id %>" method="POST">
-                            <input type="hidden" name="_method" value="DELETE">
-                            <button type="submit" class="btn btn-delete">Delete</button>
-                        </form>
+                        <div class="task-actions">
+                            <!-- Toggle Completion Form -->
+                            <form action="/tasks/<%= task.id %>/toggle" method="POST">
+                                <button type="submit" class="btn <%= task.completed ? 'btn-undo' : 'btn-complete' %>">
+                                    <%= task.completed ? 'Undo' : 'Complete' %>
+                                </button>
+                            </form>
+                            
+                            <!-- Delete Task Form -->
+                            <form action="/tasks/<%= task.id %>/delete" method="DELETE">
+                                <button type="submit" class="btn btn-delete">Delete</button>
+                            </form>
+                        </div>
                     </div>
+                <% }) %>
+            <% } else { %>
+                <div class="empty-state">
+                    <p>No tasks found. Add your first task above!</p>
                 </div>
-            <% }) %>
+            <% } %>
         </div>
     </div>
-
-    <!-- Client-side Scripts -->
-    <script>
-        // Character counters
-        const titleInput = document.getElementById('title');
-        const descInput = document.getElementById('description');
-        
-        if (titleInput) {
-            titleInput.addEventListener('input', () => {
-                document.getElementById('titleCount').textContent = titleInput.value.length;
-            });
-        }
-        
-        if (descInput) {
-            descInput.addEventListener('input', () => {
-                document.getElementById('descCount').textContent = descInput.value.length;
-            });
-        }
-
-        // Form validation
-        const form = document.getElementById('taskForm');
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                const title = this.querySelector('#title');
-                const description = this.querySelector('#description');
-                let isValid = true;
-
-                // Clear previous errors
-                document.querySelectorAll('.error-highlight').forEach(el => {
-                    el.classList.remove('error-highlight');
-                });
-
-                // Validate title
-                if (!title.value.trim()) {
-                    title.classList.add('error-highlight');
-                    isValid = false;
-                } else if (title.value.length < 3 || title.value.length > 100) {
-                    title.classList.add('error-highlight');
-                    isValid = false;
-                }
-
-                // Validate description
-                if (description.value.length > 500) {
-                    description.classList.add('error-highlight');
-                    isValid = false;
-                }
-
-                if (!isValid) {
-                    e.preventDefault();
-                    alert('Please fix the validation errors before submitting.');
-                }
-            });
-        }
-
-        // Method override for PATCH/DELETE
-        document.querySelectorAll('form[method="POST"]').forEach(form => {
-            const methodInput = form.querySelector('input[name="_method"]');
-            if (methodInput) {
-                form.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    
-                    try {
-                        const response = await fetch(form.action, {
-                            method: methodInput.value,
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            },
-                            body: new URLSearchParams(new FormData(form))
-                        });
-                        
-                        if (response.redirected) {
-                            window.location.href = response.url;
-                        } else {
-                            window.location.reload();
-                        }
-                    } catch (error) {
-                        console.error('Error:', error);
-                        window.location.reload();
-                    }
-                });
-            }
-        });
-    </script>
 </body>
 </html>

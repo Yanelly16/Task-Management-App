@@ -1,9 +1,13 @@
 //Filename:  app.js
 
+
 import express from "express";
 import path from "path";
 const app = express();
+
+
 import taskmanagementRoutes from "./routes/taskmanagementRoutes.js";
+
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(process.cwd(), "public")));
@@ -27,7 +31,7 @@ app.use((req, res) => {
   res.status(404).send("404 Not Found.\n");
 });
 
-const PORT = 3002;
+const PORT = 3006;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
 });
