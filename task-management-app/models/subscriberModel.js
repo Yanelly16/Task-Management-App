@@ -2,26 +2,9 @@
 
 import { query } from "../config/db.js";
 
-export const getAllTasks = async (filter = null, sort = null) => {
+export const getAllTasks = async () => {
   try {
-    let sql = "SELECT * FROM tasks";
-    const params = [];
-    
-    // Add filtering if specified
-    if (filter === 'completed') {
-      sql += " WHERE completed = true";
-    } else if (filter === 'active') {
-      sql += " WHERE completed = false";
-    }
-
-    // Add sorting if specified
-    if (sort === 'priority') {
-      sql += " ORDER BY CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END";
-    } else {
-      sql += " ORDER BY created_at DESC";
-    }
-
-    const result = await query(sql, params);
+    const result = await query("SELECT * FROM tasks ORDER BY created_at DESC");
     return result.rows;
   } catch (error) {
     console.error("Error fetching tasks:", error);
@@ -29,15 +12,15 @@ export const getAllTasks = async (filter = null, sort = null) => {
   }
 };
 
-export const addTask = async (title, description, priority) => {
+export const createTask = async (title, description) => {
   try {
     const result = await query(
-      "INSERT INTO tasks (title, description, priority) VALUES ($1, $2, $3) RETURNING *",
-      [title, description, priority || 'medium']
+      "INSERT INTO tasks (title, description) VALUES ($1, $2) RETURNING *",
+      [title, description]
     );
     return result.rows[0];
   } catch (error) {
-    console.error("Error adding task:", error);
+    console.error("Error creating task:", error);
     throw error;
   }
 };
@@ -50,7 +33,7 @@ export const toggleTaskCompletion = async (id) => {
     );
     return result.rows[0];
   } catch (error) {
-    console.error("Error toggling task completion:", error);
+    console.error("Error toggling task:", error);
     throw error;
   }
 };
@@ -61,6 +44,19 @@ export const deleteTask = async (id) => {
     return { id };
   } catch (error) {
     console.error("Error deleting task:", error);
+    throw error;
+  }
+};
+
+export const updateTask = async (id, title, description) => {
+  try {
+    const result = await query(
+      "UPDATE tasks SET title = $1, description = $2 WHERE id = $3 RETURNING *",
+      [title, description, id]
+    );
+    return result.rows[0];
+  } catch (error) {
+    console.error("Error updating task:", error);
     throw error;
   }
 };
