@@ -1,1 +1,160 @@
 <!--Filename: views/task.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <link rel="stylesheet" href="../public/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Task Manager</h1>
+
+        <!-- Error Display -->
+        <% if (errors.length > 0) { %>
+            <div class="error-container">
+                <ul>
+                    <% errors.forEach(error => { %>
+                        <li><%= error %></li>
+                    <% }) %>
+                </ul>
+            </div>
+        <% } %>
+
+        <!-- Task Form -->
+        <form id="taskForm" action="/tasks" method="POST">
+            <div class="form-group">
+                <label for="title">Title *</label>
+                <input type="text" id="title" name="title" 
+                       value="<%= formData.title %>"
+                       required
+                       minlength="3"
+                       maxlength="100">
+                <div class="counter"><span id="titleCount"><%= titleLength %></span>/100</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" maxlength="500"><%= formData.description %></textarea>
+                <div class="counter"><span id="descCount"><%= descLength %></span>/500</div>
+            </div>
+            
+            <button type="submit" class="btn">Add Task</button>
+        </form>
+
+        <!-- Task List -->
+        <div class="task-list">
+            <% tasks.forEach(task => { %>
+                <div class="task <%= task.completed ? 'completed' : '' %>">
+                    <div class="task-content">
+                        <h3><%= task.title %></h3>
+                        <% if (task.description) { %>
+                            <p><%= task.description %></p>
+                        <% } %>
+                    </div>
+                    
+                    <div class="task-actions">
+                        <!-- Toggle Completion -->
+                        <form action="/tasks/<%= task.id %>" method="POST">
+                            <input type="hidden" name="_method" value="PATCH">
+                            <button type="submit" class="btn <%= task.completed ? 'btn-undo' : 'btn-complete' %>">
+                                <%= task.completed ? 'Undo' : 'Complete' %>
+                            </button>
+                        </form>
+                        
+                        <!-- Delete Task -->
+                        <form action="/tasks/<%= task.id %>" method="POST">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="submit" class="btn btn-delete">Delete</button>
+                        </form>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+
+    <!-- Client-side Scripts -->
+    <script>
+        // Character counters
+        const titleInput = document.getElementById('title');
+        const descInput = document.getElementById('description');
+        
+        if (titleInput) {
+            titleInput.addEventListener('input', () => {
+                document.getElementById('titleCount').textContent = titleInput.value.length;
+            });
+        }
+        
+        if (descInput) {
+            descInput.addEventListener('input', () => {
+                document.getElementById('descCount').textContent = descInput.value.length;
+            });
+        }
+
+        // Form validation
+        const form = document.getElementById('taskForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const title = this.querySelector('#title');
+                const description = this.querySelector('#description');
+                let isValid = true;
+
+                // Clear previous errors
+                document.querySelectorAll('.error-highlight').forEach(el => {
+                    el.classList.remove('error-highlight');
+                });
+
+                // Validate title
+                if (!title.value.trim()) {
+                    title.classList.add('error-highlight');
+                    isValid = false;
+                } else if (title.value.length < 3 || title.value.length > 100) {
+                    title.classList.add('error-highlight');
+                    isValid = false;
+                }
+
+                // Validate description
+                if (description.value.length > 500) {
+                    description.classList.add('error-highlight');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Please fix the validation errors before submitting.');
+                }
+            });
+        }
+
+        // Method override for PATCH/DELETE
+        document.querySelectorAll('form[method="POST"]').forEach(form => {
+            const methodInput = form.querySelector('input[name="_method"]');
+            if (methodInput) {
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    try {
+                        const response = await fetch(form.action, {
+                            method: methodInput.value,
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                            },
+                            body: new URLSearchParams(new FormData(form))
+                        });
+                        
+                        if (response.redirected) {
+                            window.location.href = response.url;
+                        } else {
+                            window.location.reload();
+                        }
+                    } catch (error) {
+                        console.error('Error:', error);
+                        window.location.reload();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

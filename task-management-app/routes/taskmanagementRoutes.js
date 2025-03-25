@@ -7,7 +7,7 @@ import {
   addTask,
   toggleComplete,
   removeTask,
-  editTask
+  editTask,
 } from "../controllers/taskController.js";
 
 
@@ -25,5 +25,13 @@ router.delete("/tasks/:id", removeTask);
 
 // PUT /tasks/:id - Update task details
 router.put("/tasks/:id", editTask);
+
+// Error handling middleware for routes
+router.use((err, req, res, next) => {
+  console.error('Route error:', err);
+  res.status(500).json({ 
+    error: err.message || 'An unexpected error occurred'
+  });
+});
 
 export default router;
