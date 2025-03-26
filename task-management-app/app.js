@@ -2,8 +2,12 @@
 
 
 import express from "express";
+import methodOverride from 'method-override';
+
 import path from "path";
 const app = express();
+
+app.use(methodOverride('_method'));
 
 
 import taskmanagementRoutes from "./routes/taskmanagementRoutes.js";
@@ -31,7 +35,7 @@ app.use((req, res) => {
   res.status(404).send("404 Not Found.\n");
 });
 
-const PORT = 3006;
+const PORT = 3008;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
 });

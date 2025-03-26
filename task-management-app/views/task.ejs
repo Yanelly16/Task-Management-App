@@ -263,14 +263,14 @@
                         
                         <div class="task-actions">
                             <!-- Toggle Completion Form -->
-                            <form action="/tasks/<%= task.id %>/toggle" method="POST">
+                            <form action="/tasks/<%= task.id %>?_method=PATCH" method="POST">
                                 <button type="submit" class="btn <%= task.completed ? 'btn-undo' : 'btn-complete' %>">
                                     <%= task.completed ? 'Undo' : 'Complete' %>
                                 </button>
                             </form>
                             
                             <!-- Delete Task Form -->
-                            <form action="/tasks/<%= task.id %>/delete" method="DELETE">
+                            <form action="/tasks/<%= task.id %>?_method=DELETE" method="POST">
                                 <button type="submit" class="btn btn-delete">Delete</button>
                             </form>
                         </div>
