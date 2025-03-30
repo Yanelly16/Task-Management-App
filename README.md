@@ -8,9 +8,7 @@ This is a Task Management Web Application built with Node.js, Express, PostgreSQ
 ✅ Add new tasks with a title and optional description  
 ✅ Toggle task completion status 
 ✅ Delete tasks  
-
 ✅ Input validation(title length, description length)
-
 ✅ Persistent data storage in PostgreSQL
 
 ## Setup Instructions
