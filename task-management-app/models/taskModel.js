@@ -1,8 +1,25 @@
 //Filename: models/subscriberModel.js
 
 import { query } from "../config/db.js";
-
-export const getAllTasks = async () => {
+export const getAllTasks = async (searchQuery = '') => {
+  try {
+      let sql = "SELECT * FROM tasks";
+      let params = [];
+      
+      if (searchQuery && searchQuery.trim() !== '') {
+          sql += " WHERE LOWER(title) LIKE $1 OR LOWER(description) LIKE $1";
+          params.push(`%${searchQuery.toLowerCase().trim()}%`);
+      }
+      
+      sql += " ORDER BY created_at DESC";
+      const result = await query(sql, params);
+      return result.rows;
+  } catch (error) {
+      console.error("Error fetching tasks:", error);
+      throw error;
+  }
+};
+/*export const getAllTasks = async () => {
   try {
     const result = await query("SELECT * FROM tasks ORDER BY created_at DESC");
     return result.rows;
@@ -10,7 +27,7 @@ export const getAllTasks = async () => {
     console.error("Error fetching tasks:", error);
     throw error;
   }
-};
+};*/
 
 export const createTask = async (title, description) => {
   try {

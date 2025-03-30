@@ -8,6 +8,7 @@ import {
   toggleComplete,
   removeTask,
   editTask,
+  enableEditMode,
 } from "../controllers/taskController.js";
 
 
@@ -25,6 +26,8 @@ router.delete("/tasks/:id", removeTask);
 
 // PUT /tasks/:id - Update task details
 router.put("/tasks/:id", editTask);
+
+router.get('/tasks/:id/edit', enableEditMode);
 
 // Error handling middleware for routes
 router.use((err, req, res, next) => {
