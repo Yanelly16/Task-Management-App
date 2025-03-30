@@ -45,10 +45,6 @@ This is a Task Management Web Application built with Node.js, Express, PostgreSQ
 
 The app will be available at : http://localhost:3000
 
-## Usage Guide
-Here's a clean, user-focused **Usage Guide** for your web application:
-
----
 
 ## 🌟 How to Use the Task Manager
 
