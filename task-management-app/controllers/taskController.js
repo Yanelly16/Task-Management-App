@@ -1,16 +1,9 @@
 //Filename: controllers/subscriberController.js
-import {
-  getAllTasks,
-  createTask,
-  toggleTaskCompletion,
-  deleteTask,
-  updateTask
-} from "../models/taskModel.js";
 
-// Enhanced validation with detailed messages
+// Validation helper for task input
 const validateTaskInput = (title, description) => {
   const errors = [];
-  
+ 
   // Title validation
   title = title?.trim() || '';
   if (!title) {
@@ -24,7 +17,7 @@ const validateTaskInput = (title, description) => {
     }
   }
 
-  // Description validation
+  // Description validation (optional field)
   if (description && description.length > 500) {
     errors.push("Description cannot exceed 500 characters");
   }
@@ -32,12 +25,13 @@ const validateTaskInput = (title, description) => {
   return errors;
 };
 
-// Helper to build error redirect URL
+// Helper to build URL with error messages and form data
 const buildErrorUrl = (errors, formData = {}) => {
   const params = new URLSearchParams();
   if (errors.length > 0) {
     params.append('errors', JSON.stringify(errors));
   }
+  // Preserve form data for repopulating the form
   if (formData.title) {
     params.append('title', formData.title);
   }
@@ -47,34 +41,13 @@ const buildErrorUrl = (errors, formData = {}) => {
   return `/?${params.toString()}`;
 };
 
-/*export const showTasks = async (req, res) => {
-  try {
-    const tasks = await getAllTasks();
-    
-    // Get errors and form data from query params
-    const errors = req.query.errors ? JSON.parse(req.query.errors) : [];
-    const formData = {
-      title: req.query.title || '',
-      description: req.query.description || ''
-    };
-    
-    res.render("task", {
-      tasks: tasks || [],
-      errors,
-      formData,
-      titleLength: formData.title.length,
-      descLength: formData.description.length
-    });
-  } catch (error) {
-    console.error('Error:', error);
-    res.redirect(buildErrorUrl(["Failed to load tasks"]));
-  }
-};*/
+// Display all tasks with optional search
 export const showTasks = async (req, res) => {
   try {
       const searchQuery = req.query.search || '';
       const tasks = await getAllTasks(searchQuery);
-      
+     
+      // Render the task view with all necessary data
       res.render("task", {
           tasks: tasks || [],
           errors: req.query.errors ? JSON.parse(req.query.errors) : [],
@@ -92,10 +65,12 @@ export const showTasks = async (req, res) => {
   }
 };
 
+// Add a new task
 export const addTask = async (req, res) => {
   const { title, description } = req.body;
   const errors = validateTaskInput(title, description);
 
+  // If validation errors, redirect back with errors and form data
   if (errors.length > 0) {
     return res.redirect(buildErrorUrl(errors, { title, description }));
   }
@@ -109,6 +84,7 @@ export const addTask = async (req, res) => {
   }
 };
 
+// Toggle task completion status
 export const toggleComplete = async (req, res) => {
   try {
     await toggleTaskCompletion(req.params.id);
@@ -119,6 +95,7 @@ export const toggleComplete = async (req, res) => {
   }
 };
 
+// Delete a task
 export const removeTask = async (req, res) => {
   try {
     await deleteTask(req.params.id);
@@ -129,29 +106,32 @@ export const removeTask = async (req, res) => {
   }
 };
 
+// Enable edit mode for a specific task
 export const enableEditMode = async (req, res) => {
   try {
       const tasks = await getAllTasks(req.query.search || '');
       const taskId = req.params.id;
-      
-      // Find the task being edited
+     
+      // Find the task to edit
       const taskToEdit = tasks.find(task => task.id.toString() === taskId.toString());
-      
+     
       if (!taskToEdit) {
           return res.redirect(buildErrorUrl(["Task not found"]));
       }
 
+      // Mark only the edited task as in editing mode
       const updatedTasks = tasks.map(task => ({
           ...task,
           editing: task.id.toString() === taskId.toString()
       }));
-      
+     
+      // Render view with the task to edit pre-populated
       res.render("task", {
           tasks: updatedTasks,
           errors: [],
-          formData: { 
-              title: taskToEdit.title, 
-              description: taskToEdit.description || '' 
+          formData: {
+              title: taskToEdit.title,
+              description: taskToEdit.description || ''
           },
           searchQuery: req.query.search || ''
       });
@@ -161,20 +141,23 @@ export const enableEditMode = async (req, res) => {
   }
 };
 
+// Update an existing task
 export const editTask = async (req, res) => {
   const { title, description } = req.body;
   const errors = validateTaskInput(title, description);
 
+  // If validation errors, stay in edit mode with errors
   if (errors.length > 0) {
       try {
           const tasks = await getAllTasks(req.query.search || '');
           const taskId = req.params.id;
-          
+         
+          // Mark only the edited task as in editing mode
           const updatedTasks = tasks.map(task => ({
               ...task,
               editing: task.id === taskId
           }));
-          
+         
           return res.render("task", {
               tasks: updatedTasks,
               errors,
@@ -187,8 +170,10 @@ export const editTask = async (req, res) => {
       }
   }
 
+  // If validation passes, update the task
   try {
       await updateTask(req.params.id, title.trim(), description?.trim());
+      // Preserve search query when redirecting back
       res.redirect("/?search=" + encodeURIComponent(req.query.search || ''));
   } catch (error) {
       console.error('Error:', error);
