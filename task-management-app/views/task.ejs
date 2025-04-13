@@ -12,7 +12,6 @@
     <div class="container">
         <h1><i class="fas fa-tasks"></i> Task Manager</h1>
 
-        <!-- Error Display -->
         <% if (errors && errors.length > 0) { %>
             <div class="error-container">
                 <ul>
@@ -23,10 +22,9 @@
             </div>
         <% } %>
 
-        <!-- Add Task Form -->
         <div class="form-container">
             <h2><i class="fas fa-plus-circle"></i> Add New Task</h2>
-            <form action="/tasks" method="POST" class="task-form">
+            <form action="/tasks" method="POST" class="task-form" id="taskForm">
                 <div class="form-group">
                     <label for="title">Title *</label>
                     <input type="text" id="title" name="title" 
@@ -35,7 +33,14 @@
                            minlength="3"
                            maxlength="100"
                            class="form-control <%= errors && errors.some(e => e.toLowerCase().includes('title')) ? 'is-invalid' : '' %>">
-                    <div class="counter"><span><%= formData && formData.title ? formData.title.length : 0 %></span>/100</div>
+                    <div class="invalid-feedback" id="titleError">
+                        <% if (errors && errors.some(e => e.toLowerCase().includes('title'))) { %>
+                            <%= errors.find(e => e.toLowerCase().includes('title')) %>
+                        <% } %>
+                    </div>
+                    <div class="counter <%= formData && formData.title && (formData.title.length < 3 || formData.title.length > 100) ? 'error' : '' %>">
+                        <span id="titleCounter"><%= formData && formData.title ? formData.title.length : 0 %></span>/100
+                    </div>
                 </div>
                 
                 <div class="form-group">
@@ -43,7 +48,14 @@
                     <textarea id="description" name="description" 
                               maxlength="500"
                               class="form-control <%= errors && errors.some(e => e.toLowerCase().includes('description')) ? 'is-invalid' : '' %>"><%= formData && formData.description || '' %></textarea>
-                    <div class="counter"><span><%= formData && formData.description ? formData.description.length : 0 %></span>/500</div>
+                    <div class="invalid-feedback" id="descError">
+                        <% if (errors && errors.some(e => e.toLowerCase().includes('description'))) { %>
+                            <%= errors.find(e => e.toLowerCase().includes('description')) %>
+                        <% } %>
+                    </div>
+                    <div class="counter <%= formData && formData.description && formData.description.length > 500 ? 'error' : '' %>">
+                        <span id="descCounter"><%= formData && formData.description ? formData.description.length : 0 %></span>/500
+                    </div>
                 </div>
                 
                 <button type="submit" class="btn btn-primary">
@@ -52,36 +64,32 @@
             </form>
         </div>
 
-        <!-- Search Form - Separate div below Add Task -->
-        <div class="form-container search-container">
+        <div class="form-container">
             <h2><i class="fas fa-search"></i> Search Tasks</h2>
             <form action="/" method="GET" class="search-form">
                 <div class="form-group">
                     <div class="input-group">
                         <input type="text" name="search" placeholder="Search by title or description..." 
                                value="<%= searchQuery || '' %>" class="form-control">
-                        <div class="input-group-append">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-search"></i> Search
-                            </button>
-                            <% if (searchQuery) { %>
-                                <a href="/" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Clear
-                                </a>
-                            <% } %>
-                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <% if (searchQuery) { %>
+                            <a href="/" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Clear
+                            </a>
+                        <% } %>
                     </div>
                 </div>
             </form>
         </div>
 
-        <!-- Task List -->
         <div class="task-list-container">
             <h2><i class="fas fa-list"></i> Task List</h2>
             
             <% if (tasks && tasks.length > 0) { %>
                 <% if (searchQuery) { %>
-                    <div class="search-info">
+                    <div class="error-container search-info">
                         <i class="fas fa-info-circle"></i> Showing results for: "<%= searchQuery %>"
                     </div>
                 <% } %>
@@ -90,16 +98,33 @@
                     <% tasks.forEach(task => { %>
                         <div class="task-card <%= task.completed ? 'completed' : '' %>">
                             <% if (task.editing) { %>
-                                <!-- Edit Task Form -->
                                 <form action="/tasks/<%= task.id %>?_method=PUT" method="POST" class="edit-form">
                                     <div class="form-group">
-                                        <label>Title</label>
+                                        <label>Title *</label>
                                         <input type="text" name="title" value="<%= task.title %>" 
-                                               required minlength="3" maxlength="100" class="form-control">
+                                               required minlength="3" maxlength="100" 
+                                               class="form-control <%= errors && errors.some(e => e.toLowerCase().includes('title')) ? 'is-invalid' : '' %>">
+                                        <div class="invalid-feedback">
+                                            <% if (errors && errors.some(e => e.toLowerCase().includes('title'))) { %>
+                                                <%= errors.find(e => e.toLowerCase().includes('title')) %>
+                                            <% } %>
+                                        </div>
+                                        <div class="counter <%= task.title && (task.title.length < 3 || task.title.length > 100) ? 'error' : '' %>">
+                                            <span class="edit-title-counter"><%= task.title ? task.title.length : 0 %></span>/100
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <label>Description</label>
-                                        <textarea name="description" maxlength="500" class="form-control"><%= task.description || '' %></textarea>
+                                        <textarea name="description" maxlength="500" 
+                                                  class="form-control <%= errors && errors.some(e => e.toLowerCase().includes('description')) ? 'is-invalid' : '' %>"><%= task.description || '' %></textarea>
+                                        <div class="invalid-feedback">
+                                            <% if (errors && errors.some(e => e.toLowerCase().includes('description'))) { %>
+                                                <%= errors.find(e => e.toLowerCase().includes('description')) %>
+                                            <% } %>
+                                        </div>
+                                        <div class="counter <%= task.description && task.description.length > 500 ? 'error' : '' %>">
+                                            <span class="edit-desc-counter"><%= task.description ? task.description.length : 0 %></span>/500
+                                        </div>
                                     </div>
                                     <% if (searchQuery) { %>
                                         <input type="hidden" name="search" value="<%= searchQuery %>">
@@ -114,7 +139,6 @@
                                     </div>
                                 </form>
                             <% } else { %>
-                                <!-- Task Display -->
                                 <div class="task-content">
                                     <h3 class="task-title <%= task.completed ? 'completed' : '' %>">
                                         <%= task.title %>
@@ -134,7 +158,6 @@
                                     </div>
                                 </div>
                                 
-                                <!-- Task Actions (all in forms) -->
                                 <div class="task-actions">
                                     <form action="/tasks/<%= task.id %>/edit" method="GET">
                                         <% if (searchQuery) { %>
@@ -190,5 +213,145 @@
             <% } %>
         </div>
     </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add form elements
+        const titleInput = document.getElementById('title');
+        const descriptionInput = document.getElementById('description');
+        const titleCounter = document.getElementById('titleCounter');
+        const descCounter = document.getElementById('descCounter');
+        const titleError = document.getElementById('titleError');
+        const descError = document.getElementById('descError');
+        const form = document.getElementById('taskForm');
+
+        // Real-time validation for title
+        if (titleInput) {
+            titleInput.addEventListener('input', function() {
+                const value = this.value;
+                titleCounter.textContent = value.length;
+                const counter = this.nextElementSibling.nextElementSibling;
+                
+                // Clear previous errors
+                this.classList.remove('is-invalid');
+                titleError.style.display = 'none';
+                
+                if (value.length > 100) {
+                    counter.classList.add('error');
+                    showError(this, 'Title cannot exceed 100 characters');
+                } else if (value.length < 3 && value.length > 0) {
+                    counter.classList.add('error');
+                    showError(this, 'Title must be at least 3 characters');
+                } else {
+                    counter.classList.remove('error');
+                }
+            });
+
+            // Validate on blur
+            titleInput.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    showError(this, 'Title is required');
+                }
+            });
+        }
+
+        // Real-time validation for description
+        if (descriptionInput) {
+            descriptionInput.addEventListener('input', function() {
+                const value = this.value;
+                descCounter.textContent = value.length;
+                const counter = this.nextElementSibling.nextElementSibling;
+                
+                // Clear previous errors
+                this.classList.remove('is-invalid');
+                descError.style.display = 'none';
+                
+                if (value.length > 500) {
+                    counter.classList.add('error');
+                    showError(this, 'Description cannot exceed 500 characters');
+                } else {
+                    counter.classList.remove('error');
+                }
+            });
+        }
+
+        // Form submission validation
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                let isValid = true;
+                const title = titleInput.value.trim();
+                const description = descriptionInput.value.trim();
+
+                // Clear previous errors
+                document.querySelectorAll('.is-invalid').forEach(el => {
+                    el.classList.remove('is-invalid');
+                });
+                titleError.style.display = 'none';
+                descError.style.display = 'none';
+
+                // Validate title
+                if (!title) {
+                    showError(titleInput, 'Title is required');
+                    isValid = false;
+                } else if (title.length < 3) {
+                    showError(titleInput, 'Title must be at least 3 characters');
+                    isValid = false;
+                } else if (title.length > 100) {
+                    showError(titleInput, 'Title cannot exceed 100 characters');
+                    isValid = false;
+                }
+
+                // Validate description
+                if (description.length > 500) {
+                    showError(descriptionInput, 'Description cannot exceed 500 characters');
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Edit form counters
+        document.querySelectorAll('.edit-form').forEach(editForm => {
+            const titleInput = editForm.querySelector('input[name="title"]');
+            const descInput = editForm.querySelector('textarea[name="description"]');
+            const titleCounter = editForm.querySelector('.edit-title-counter');
+            const descCounter = editForm.querySelector('.edit-desc-counter');
+
+            if (titleInput) {
+                titleInput.addEventListener('input', function() {
+                    titleCounter.textContent = this.value.length;
+                    const counter = this.nextElementSibling.nextElementSibling;
+                    if (this.value.length > 100 || this.value.length < 3) {
+                        counter.classList.add('error');
+                    } else {
+                        counter.classList.remove('error');
+                    }
+                });
+            }
+
+            if (descInput) {
+                descInput.addEventListener('input', function() {
+                    descCounter.textContent = this.value.length;
+                    const counter = this.nextElementSibling.nextElementSibling;
+                    if (this.value.length > 500) {
+                        counter.classList.add('error');
+                    } else {
+                        counter.classList.remove('error');
+                    }
+                });
+            }
+        });
+
+        function showError(input, message) {
+            input.classList.add('is-invalid');
+            const errorElement = input.id === 'title' ? titleError : descError;
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+        }
+    });
+    </script>
 </body>
 </html>
