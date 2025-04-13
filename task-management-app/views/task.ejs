@@ -212,13 +212,14 @@
                 </div>
             <% } %>
         </div>
-        <footer>
-            <p>© 2025 Task Manager App | Built with Node.js and PostgreSQL</p>
-        </footer>
+        
+<footer>
+    <p>© 2025 Task Manager App | Built with Node.js and PostgreSQL</p>
+</footer>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', function() {
         // Add form elements
         const titleInput = document.getElementById('title');
         const descriptionInput = document.getElementById('description');
@@ -258,7 +259,7 @@
             });
         }
 
-        // Real-time validation for description
+        // Modified validation for description - allows typing but shows error
         if (descriptionInput) {
             descriptionInput.addEventListener('input', function() {
                 const value = this.value;
@@ -308,10 +309,18 @@
                 if (description.length > 500) {
                     showError(descriptionInput, 'Description cannot exceed 500 characters');
                     isValid = false;
+                    // Highlight the counter
+                    const counter = descriptionInput.nextElementSibling.nextElementSibling;
+                    counter.classList.add('error');
                 }
 
                 if (!isValid) {
                     e.preventDefault();
+                    // Scroll to the first error
+                    const firstError = document.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                 }
             });
         }
@@ -350,7 +359,7 @@
 
         function showError(input, message) {
             input.classList.add('is-invalid');
-            const errorElement = input.id === 'title' ? titleError : descError;
+            const errorElement = input.nextElementSibling;
             errorElement.textContent = message;
             errorElement.style.display = 'block';
         }

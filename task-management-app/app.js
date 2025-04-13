@@ -35,7 +35,7 @@ app.use((req, res) => {
   res.status(404).send("404 Not Found.\n");
 });
 
-const PORT = 2020;
+const PORT = 2022;
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}/`);
 });
